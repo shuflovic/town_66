@@ -40,7 +40,7 @@ const Board: React.FC<BoardProps> = ({ board, onCellClick, validMoves, selectedT
             return (
               <div
                 key={`${r}-${c}`}
-                className={`w-20 h-20 md:w-24 md:h-24 flex items-center justify-center rounded-md transition-colors ${getCellClasses()}`}
+                className={`w-16 h-16 md:w-24 md:h-24 flex items-center justify-center rounded-md transition-colors ${getCellClasses()}`}
                 onClick={() => (isClickable ? onCellClick(r, c) : null)}
               >
                 {isPlaced ? <Tile tile={tile} /> : (selectedTile && isValidMove && showHints) ? <Tile tile={selectedTile} isGhost={true} /> : null}
