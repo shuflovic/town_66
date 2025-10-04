@@ -23,10 +23,10 @@ const Tile: React.FC<TileProps> = ({ tile, onClick, isSelected = false, isGhost 
 
   return (
     <div 
-      className={`w-16 h-16 md:w-24 md:h-24 flex items-center justify-center rounded-lg shadow-md border-2 ${colorClass.bg} ${colorClass.border} ${selectedClasses} ${ghostClasses} ${clickableClasses}`}}
+      className={`w-16 h-16 md:w-24 md:h-24 flex items-center justify-center rounded-lg shadow-md border-2 ${colorClass.bg} ${colorClass.border} ${selectedClasses} ${ghostClasses} ${clickableClasses}`}
       onClick={onClick}
     >
-      <div className={`w-10 h-10 md:w-12 md:h-12 ${colorClass.text}`}>
+      <div className={`w-8 h-8 md:w-12 md:h-12 ${colorClass.text}`}>
         {shapeIcon}
       </div>
     </div>
