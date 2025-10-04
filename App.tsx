@@ -197,8 +197,7 @@ const App: React.FC = () => {
             const file = new File([blob], `town${gridSize}${gridSize}-board.png`, { type: 'image/png' });
             const shareData = {
                 title: `Town ${gridSize}${gridSize} Score`,
-                text: `I scored ${lastScores[gridSize]} in Town ${gridSize}${gridSize}! Can you beat my score? #Town${gridSize}${gridSize}`,
-                url: 'https://shuflovic.github.io/town_66',
+                text: `I scored ${lastScores[gridSize]} in Town ${gridSize}${gridSize}! Can you beat my score? #Town${gridSize}${gridSize}, https://shuflovic.github.io/town_66',
                 files: [file],
             };
             await navigator.share(shareData);
