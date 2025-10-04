@@ -67,7 +67,9 @@ const App: React.FC = () => {
     const center = Math.floor(size / 2);
     newBoard[center][center] = firstTile;
 
+  
     setBoard(newBoard);
+    console.log('Board after setBoard:', newBoard);
     setPlayerHand(newDeck.splice(0, INITIAL_HAND_SIZE));
     setDeck(newDeck);
     setMessage('Place a tile adjacent to an existing one.');
