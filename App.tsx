@@ -67,9 +67,7 @@ const App: React.FC = () => {
     const center = Math.floor(size / 2);
     newBoard[center][center] = firstTile;
 
-  
     setBoard(newBoard);
-    console.log('Board after setBoard:', newBoard);
     setPlayerHand(newDeck.splice(0, INITIAL_HAND_SIZE));
     setDeck(newDeck);
     setMessage('Place a tile adjacent to an existing one.');
@@ -200,7 +198,7 @@ const App: React.FC = () => {
             const shareData = {
                 title: `Town ${gridSize}${gridSize} Score`,
                 text: `I scored ${lastScores[gridSize]} in Town ${gridSize}${gridSize}! Can you beat my score? #Town${gridSize}${gridSize}`,
-                url: 'https://shuflovic.github.io/town_66/',
+                url: 'https://shuflovic.com',
                 files: [file],
             };
             await navigator.share(shareData);
@@ -252,38 +250,58 @@ const App: React.FC = () => {
       
       <header className="w-full flex justify-between items-center p-4 bg-white dark:bg-gray-800 rounded-xl shadow-md">
           <div className="flex items-center gap-6">
-            <h1 className="text-3xl font-bold text-gray-800 dark:text-white">Town</h1>
-            <div className="flex items-center bg-gray-200 dark:bg-gray-700 rounded-lg p-1">
-                {[5, 6, 7].map(size => (
-                    <button
-                        key={size}
-                        onClick={() => handleSizeChange(size)}
-                        aria-pressed={gridSize === size}
-                        className={`px-4 py-1 text-md font-bold rounded-md transition-colors ${
-                            gridSize === size
-                            ? 'bg-cyan-500 text-white shadow-md'
-                            : 'text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
-                        }`}
-                    >
-                        {size}x{size}
-                    </button>
-                ))}
+            <h1 className="text-3xl font-bold text-gray-800 dark:text-white">Town 66</h1>
+            <div className="flex items-center space-x-4 border-l border-gray-300 dark:border-gray-600 pl-6">
+                <div className="text-center">
+                    <div className="text-sm text-gray-500 dark:text-gray-400">High Score</div>
+                    <div className="text-2xl font-bold text-gray-700 dark:text-gray-200">{highScores[gridSize] ?? 0}</div>
+                </div>
+                <div className="text-center">
+                    <div className="text-sm text-gray-500 dark:text-gray-400">Score</div>
+                    <div className="text-2xl font-bold text-gray-700 dark:text-gray-200">{score}</div>
+                </div>
+                <div className="text-center">
+                    <div className="text-sm text-gray-500 dark:text-gray-400">Deck</div>
+                    <div className="text-2xl font-bold text-gray-700 dark:text-gray-200">{deck.length}</div>
+                </div>
             </div>
           </div>
-          <div className="flex items-center space-x-4">
-            <div className="text-center">
-                <div className="text-sm text-gray-500 dark:text-gray-400">High Score</div>
-                <div className="text-2xl font-bold text-gray-700 dark:text-gray-200">{highScores[gridSize] ?? 0}</div>
+      </header>
+
+      <main ref={boardRef} className="flex-grow flex items-center justify-center">
+        {board.length > 0 && <Board board={board} onCellClick={handleCellClick} validMoves={validMoves} selectedTile={selectedTile} adjacentCells={adjacentCells} showHints={showHints} gridSize={gridSize}/>}
+      </main>
+
+      <footer className="w-full flex flex-col items-center space-y-2">
+        <div className="h-10 text-center font-semibold text-lg text-cyan-600 dark:text-cyan-400 transition-opacity flex items-center justify-center">
+          {message}
+        </div>
+        <PlayerHand 
+            hand={playerHand} 
+            onTileClick={handleTileSelect} 
+            selectedTileIndex={selectedTileIndex} 
+        />
+        <div className="w-full max-w-lg flex justify-around items-center p-2 bg-gray-200 dark:bg-gray-800 rounded-xl shadow-lg">
+            <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300 hidden sm:inline">Board Size:</span>
+                <div className="flex items-center bg-gray-300 dark:bg-gray-700 rounded-lg p-1">
+                    {[5, 6, 7].map(size => (
+                        <button
+                            key={size}
+                            onClick={() => handleSizeChange(size)}
+                            aria-pressed={gridSize === size}
+                            className={`px-3 py-1 text-sm font-bold rounded-md transition-colors ${
+                                gridSize === size
+                                ? 'bg-cyan-500 text-white shadow-md'
+                                : 'text-gray-600 dark:text-gray-300 hover:bg-gray-400 dark:hover:bg-gray-600'
+                            }`}
+                        >
+                            {size}x{size}
+                        </button>
+                    ))}
+                </div>
             </div>
-            <div className="text-center">
-                <div className="text-sm text-gray-500 dark:text-gray-400">Score</div>
-                <div className="text-2xl font-bold text-gray-700 dark:text-gray-200">{score}</div>
-            </div>
-             <div className="text-center">
-                <div className="text-sm text-gray-500 dark:text-gray-400">Deck</div>
-                <div className="text-2xl font-bold text-gray-700 dark:text-gray-200">{deck.length}</div>
-            </div>
-            <div className="flex items-center space-x-2 pl-4 border-l border-gray-300 dark:border-gray-600">
+            <div className="flex items-center space-x-2">
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300" id="show-hints-label">Show Hints</span>
                 <button
                     onClick={() => setShowHints(!showHints)}
@@ -303,21 +321,6 @@ const App: React.FC = () => {
                 </button>
             </div>
           </div>
-      </header>
-
-      <main ref={boardRef} className="flex-grow flex items-center justify-center">
-        {board.length > 0 && <Board board={board} onCellClick={handleCellClick} validMoves={validMoves} selectedTile={selectedTile} adjacentCells={adjacentCells} showHints={showHints} gridSize={gridSize}/>}
-      </main>
-
-      <footer className="w-full flex flex-col items-center space-y-4">
-        <div className="h-10 text-center font-semibold text-lg text-cyan-600 dark:text-cyan-400 transition-opacity">
-          {message}
-        </div>
-        <PlayerHand 
-            hand={playerHand} 
-            onTileClick={handleTileSelect} 
-            selectedTileIndex={selectedTileIndex} 
-        />
       </footer>
     </div>
   );
