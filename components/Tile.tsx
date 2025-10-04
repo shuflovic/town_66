@@ -7,12 +7,21 @@ interface TileProps {
   onClick?: () => void;
   isSelected?: boolean;
   isGhost?: boolean;
+  gridSize: number;
 }
 
-const Tile: React.FC<TileProps> = ({ tile, onClick, isSelected = false, isGhost = false }) => {
+const Tile: React.FC<TileProps> = ({ tile, onClick, isSelected = false, isGhost = false, gridSize }) => {
   if (!tile) {
     return null;
   }
+
+  const TILE_SIZE_MAP: { [key: number]: { container: string; icon: string } } = {
+    5: { container: 'w-16 h-16 md:w-24 md:h-24', icon: 'w-8 h-8 md:w-12 md:h-12' },
+    6: { container: 'w-14 h-14 md:w-20 md:h-20', icon: 'w-7 h-7 md:w-10 md:h-10' },
+    7: { container: 'w-12 h-12 md:w-16 md:h-16', icon: 'w-6 h-6 md:w-8 md:h-8' },
+  };
+
+  const sizes = TILE_SIZE_MAP[gridSize] || TILE_SIZE_MAP[5];
 
   const colorClass = COLOR_CLASSES[tile.color];
   const shapeIcon = SHAPE_ICONS[tile.shape];
@@ -23,10 +32,10 @@ const Tile: React.FC<TileProps> = ({ tile, onClick, isSelected = false, isGhost 
 
   return (
     <div 
-      className={`w-16 h-16 md:w-24 md:h-24 flex items-center justify-center rounded-lg shadow-md border-2 ${colorClass.bg} ${colorClass.border} ${selectedClasses} ${ghostClasses} ${clickableClasses}`}
+      className={`flex items-center justify-center rounded-lg shadow-md border-2 ${sizes.container} ${colorClass.bg} ${colorClass.border} ${selectedClasses} ${ghostClasses} ${clickableClasses}`}
       onClick={onClick}
     >
-      <div className={`w-8 h-8 md:w-12 md:h-12 ${colorClass.text}`}>
+      <div className={`${sizes.icon} ${colorClass.text}`}>
         {shapeIcon}
       </div>
     </div>
