@@ -20,6 +20,13 @@ const Board: React.FC<BoardProps> = ({ board, onCellClick, validMoves, selectedT
   };
   const gridColsClass = gridColsMap[gridSize] || 'grid-cols-5';
 
+  const TILE_SIZE_MAP: { [key: number]: string } = {
+    5: 'w-16 h-16 md:w-24 md:h-24',
+    6: 'w-14 h-14 md:w-20 md:h-20',
+    7: 'w-12 h-12 md:w-16 md:h-16',
+  };
+  const tileSizeClass = TILE_SIZE_MAP[gridSize] || TILE_SIZE_MAP[5];
+
   return (
     <div className="p-4 bg-gray-200 dark:bg-gray-800 rounded-xl shadow-inner">
       <div className={`grid ${gridColsClass} gap-1`}>
@@ -40,10 +47,10 @@ const Board: React.FC<BoardProps> = ({ board, onCellClick, validMoves, selectedT
             return (
               <div
                 key={`${r}-${c}`}
-                className={`w-16 h-16 md:w-24 md:h-24 flex items-center justify-center rounded-md transition-colors ${getCellClasses()}`}
+                className={`flex items-center justify-center rounded-md transition-colors ${tileSizeClass} ${getCellClasses()}`}
                 onClick={() => (isClickable ? onCellClick(r, c) : null)}
               >
-                {isPlaced ? <Tile tile={tile} /> : (selectedTile && isValidMove && showHints) ? <Tile tile={selectedTile} isGhost={true} /> : null}
+                {isPlaced ? <Tile tile={tile} gridSize={gridSize} /> : (selectedTile && isValidMove && showHints) ? <Tile tile={selectedTile} isGhost={true} gridSize={gridSize} /> : null}
               </div>
             );
           })
