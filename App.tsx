@@ -8,6 +8,13 @@ import useLocalStorage from './hooks/useLocalStorage';
 
 declare var html2canvas: any;
 
+interface GameHistory {
+  board: BoardType;
+  playerHand: TileType[];
+  deck: TileType[];
+  score: number;
+}
+
 const shuffleDeck = (deck: TileType[]): TileType[] => {
   const shuffled = [...deck];
   for (let i = shuffled.length - 1; i > 0; i--) {
@@ -28,6 +35,7 @@ const App: React.FC = () => {
   const [message, setMessage] = useState<string>('Welcome!');
   const [showHints, setShowHints] = useState<boolean>(false);
   const [canShare, setCanShare] = useState<boolean>(false);
+  const [history, setHistory] = useState<GameHistory[]>([]);
   
   const [highScores, setHighScores] = useLocalStorage<{ [key: number]: number }>('town-highScores', { 5: 0, 6: 0, 7: 0 });
   const [lastScores, setLastScores] = useLocalStorage<{ [key: number]: number }>('town-lastScores', { 5: 0, 6: 0, 7: 0 });
@@ -35,7 +43,6 @@ const App: React.FC = () => {
   const boardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Check if Web Share API with file support is available
     if (navigator.share && typeof navigator.canShare === 'function') {
         const dummyFile = new File([""], "dummy.png", { type: "image/png" });
         if (navigator.canShare({ files: [dummyFile] })) {
@@ -74,24 +81,21 @@ const App: React.FC = () => {
     setScore(1);
     setSelectedTileIndex(null);
     setGameState(GameState.PLAYING);
+    setHistory([]);
   }, [generateDeck]);
   
-  // This effect runs only once on mount to start the first game.
-  // handleStartGame is stable due to useCallback with stable dependencies.
   useEffect(() => {
     handleStartGame(5);
   }, [handleStartGame]);
 
   const isValidPlacement = useCallback((tile: TileType, r: number, c: number, currentBoard: BoardType): boolean => {
     if (currentBoard.length === 0) return true;
-    // Check row for duplicate shape or color
     for (let i = 0; i < gridSize; i++) {
       const boardTile = currentBoard[r][i];
       if (boardTile && (boardTile.shape === tile.shape || boardTile.color === tile.color)) {
         return false;
       }
     }
-    // Check column for duplicate shape or color
     for (let i = 0; i < gridSize; i++) {
       const boardTile = currentBoard[i][c];
       if (boardTile && (boardTile.shape === tile.shape || boardTile.color === tile.color)) {
@@ -160,6 +164,8 @@ const App: React.FC = () => {
     
     const tileToPlace = playerHand[selectedTileIndex];
     if (isValidPlacement(tileToPlace, r, c, board)) {
+      setHistory(prev => [...prev, { board, playerHand, deck, score }]);
+      
       const newBoard = board.map(row => [...row]);
       newBoard[r][c] = tileToPlace;
       setBoard(newBoard);
@@ -178,6 +184,22 @@ const App: React.FC = () => {
     } else {
       setMessage('Invalid move! No duplicate shape or color in a row or column.');
     }
+  };
+
+  const handleUndo = () => {
+    if (history.length === 0 || gameState !== GameState.PLAYING) return;
+
+    const lastState = history[history.length - 1];
+    const newHistory = history.slice(0, -1);
+
+    setBoard(lastState.board);
+    setPlayerHand(lastState.playerHand);
+    setDeck(lastState.deck);
+    setScore(lastState.score);
+    setHistory(newHistory);
+
+    setSelectedTileIndex(null);
+    setMessage('Last move undone.');
   };
   
   const handleShare = async () => {
@@ -198,7 +220,7 @@ const App: React.FC = () => {
             const shareData = {
                 title: `Town ${gridSize}${gridSize} Score`,
                 text: `I scored ${lastScores[gridSize]} in Town ${gridSize}${gridSize}! Can you beat my score? #Town${gridSize}${gridSize}`,
-                url: `https://shuflovic.github.io/town_66`,
+                url: 'https://shuflovic.com',
                 files: [file],
             };
             await navigator.share(shareData);
@@ -213,7 +235,7 @@ const App: React.FC = () => {
 
   useEffect(() => {
     if (gameState !== GameState.PLAYING) return;
-    if (board.length === 0) return; // Don't run on initial empty board
+    if (board.length === 0) return;
 
     if (!canMakeMove(playerHand, board)) {
       if (playerHand.length === 0) {
@@ -246,11 +268,28 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex flex-col items-center justify-between p-4 space-y-4">
-      <GameOverModal score={lastScores[gridSize] ?? 0} highScore={highScores[gridSize] ?? 0} onPlayAgain={handlePlayAgain} isOpen={gameState === GameState.GAME_OVER} onShare={handleShare} canShare={canShare} />
+      <GameOverModal 
+        score={lastScores[gridSize] ?? 0} 
+        highScore={highScores[gridSize] ?? 0} 
+        onPlayAgain={handlePlayAgain} 
+        isOpen={gameState === GameState.GAME_OVER} 
+        onShare={handleShare} 
+        canShare={canShare}
+      />
       
       <header className="w-full flex justify-between items-center p-4 bg-white dark:bg-gray-800 rounded-xl shadow-md">
           <div className="flex items-center gap-6">
             <h1 className="text-3xl font-bold text-gray-800 dark:text-white">Town 66</h1>
+            <button
+                onClick={handleUndo}
+                disabled={history.length === 0 || gameState !== GameState.PLAYING}
+                aria-label="Undo last move"
+                className="text-gray-500 hover:text-cyan-500 disabled:text-gray-300 dark:text-gray-400 dark:hover:text-cyan-400 dark:disabled:text-gray-600 transition-colors disabled:cursor-not-allowed"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M7.707 3.293a1 1 0 010 1.414L5.414 7H11a7 7 0 017 7v2a1 1 0 11-2 0v-2a5 5 0 00-5-5H5.414l2.293 2.293a1 1 0 11-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+            </button>
             <div className="flex items-center space-x-4 border-l border-gray-300 dark:border-gray-600 pl-6">
                 <div className="text-center">
                     <div className="text-sm text-gray-500 dark:text-gray-400">High Score</div>
@@ -279,7 +318,8 @@ const App: React.FC = () => {
         <PlayerHand 
             hand={playerHand} 
             onTileClick={handleTileSelect} 
-            selectedTileIndex={selectedTileIndex} 
+            selectedTileIndex={selectedTileIndex}
+            gridSize={gridSize}
         />
         <div className="w-full max-w-lg flex justify-around items-center p-2 bg-gray-200 dark:bg-gray-800 rounded-xl shadow-lg">
             <div className="flex items-center gap-2">
