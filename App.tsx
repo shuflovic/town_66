@@ -229,12 +229,14 @@ const App: React.FC = () => {
         const boardCanvas = await html2canvas(boardRef.current, { 
             logging: false,
             useCORS: true,
-            backgroundColor: null
+            backgroundColor: null,
+            scale: 2, // Render at double resolution for sharper text
         });
 
-        const headerHeight = 120; // Space for the text
+        const headerHeight = 240; // Space for the text, adjusted for scale
         const finalCanvas = document.createElement('canvas');
-        finalCanvas.width = boardCanvas.width;
+        const canvasPadding = 80; // Add horizontal padding, adjusted for scale
+        finalCanvas.width = boardCanvas.width + canvasPadding;
         finalCanvas.height = boardCanvas.height + headerHeight;
         const ctx = finalCanvas.getContext('2d');
 
@@ -252,21 +254,16 @@ const App: React.FC = () => {
         
         // Title
         ctx.textAlign = 'center';
-        ctx.font = 'bold 32px sans-serif';
+        ctx.font = 'bold 96px sans-serif';
         ctx.fillStyle = 'white';
-        ctx.fillText(`Town ${gridSize}x${gridSize}`, finalCanvas.width / 2, 45);
+        ctx.fillText(`Town ${gridSize}x${gridSize}`, finalCanvas.width / 2, 100);
         
         // Score line
-        ctx.font = '24px sans-serif';
-        ctx.fillText(`I scored ${currentScore}! Can you beat it?`, finalCanvas.width / 2, 80);
-        
-        // Hashtag
-        ctx.font = 'italic 20px sans-serif';
-        ctx.fillStyle = '#9ca3af'; // gray-400
-        ctx.fillText(`#Town${gridSize}${gridSize}`, finalCanvas.width / 2, 105);
+        ctx.font = '72px sans-serif';
+        ctx.fillText(`Score: ${currentScore}`, finalCanvas.width / 2, 190);
 
-        // Draw the captured board image below the text
-        ctx.drawImage(boardCanvas, 0, headerHeight);
+        // Draw the captured board image below the text, centered
+        ctx.drawImage(boardCanvas, canvasPadding / 2, headerHeight);
 
         finalCanvas.toBlob(async (blob) => {
             if (!blob) {
