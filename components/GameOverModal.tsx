@@ -7,19 +7,37 @@ interface GameOverModalProps {
   onShare: () => void;
   canShare: boolean;
   isOpen: boolean;
+  onClose: () => void;
 }
 
-const GameOverModal: React.FC<GameOverModalProps> = ({ score, highScore, onPlayAgain, onShare, canShare, isOpen }) => {
+const GameOverModal: React.FC<GameOverModalProps> = ({ 
+  score, 
+  highScore, 
+  onPlayAgain, 
+  onShare, 
+  canShare, 
+  isOpen,
+  onClose,
+}) => {
   if (!isOpen) return null;
 
-  const isNewHighScore = score === highScore && score > 0;
+  const isNewPersonalHighScore = score > 0 && score === highScore;
 
   return (
     <div className="fixed inset-0 bg-gray-900 bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
-      <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl p-8 text-center max-w-sm w-full animate-fade-in-up">
+      <div className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-md border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl p-8 text-center max-w-sm w-full animate-fade-in-up">
+        <button
+          onClick={onClose}
+          aria-label="Close modal"
+          className="absolute top-3 right-3 text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white transition-colors"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
         <h2 className="text-4xl font-extrabold mb-4 text-cyan-500 dark:text-cyan-400">Game Over!</h2>
         
-        {isNewHighScore && (
+        {isNewPersonalHighScore && (
             <p className="text-2xl font-bold text-yellow-500 dark:text-yellow-400 mb-4 animate-pulse">
                 New High Score!
             </p>
@@ -31,7 +49,9 @@ const GameOverModal: React.FC<GameOverModalProps> = ({ score, highScore, onPlayA
         
         <div className="border-t border-gray-200 dark:border-gray-700 my-6"></div>
 
-        <p className="text-lg text-gray-500 dark:text-gray-400">High Score: <span className="font-bold text-gray-700 dark:text-gray-200">{highScore}</span></p>
+        <div className="flex justify-center text-lg text-gray-500 dark:text-gray-400">
+            <div>Your Best: <span className="font-bold text-gray-700 dark:text-gray-200">{highScore}</span></div>
+        </div>
 
         <div className="mt-8 flex flex-col sm:flex-row justify-center items-center gap-4">
             <button
