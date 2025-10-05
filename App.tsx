@@ -260,7 +260,7 @@ const App: React.FC = () => {
         
         // Score line
         ctx.font = '66px sans-serif';
-        ctx.fillText(`I did: ${currentScore}, can you beat me?`, finalCanvas.width / 2, 190);
+        ctx.fillText(`I did  ${currentScore}, can you beat me?`, finalCanvas.width / 2, 190);
 
         // Draw the captured board image below the text, centered
         ctx.drawImage(boardCanvas, canvasPadding / 2, headerHeight);
