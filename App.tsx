@@ -205,6 +205,22 @@ const App: React.FC = () => {
     setSelectedTileIndex(null);
     setMessage('Last move undone.');
   };
+
+  const handleShuffle = () => {
+    if (deck.length < playerHand.length || gameState !== GameState.PLAYING) return;
+
+    setHistory(prev => [...prev, { board, playerHand, deck, score }]);
+
+    const combined = shuffleDeck([...deck, ...playerHand]);
+    
+    const newHand = combined.splice(0, playerHand.length);
+    const newDeck = combined;
+
+    setPlayerHand(newHand);
+    setDeck(newDeck);
+    setSelectedTileIndex(null);
+    setMessage('Hand shuffled.');
+  };
   
   const handleShare = async () => {
     if (!boardRef.current) return;
@@ -352,6 +368,17 @@ const App: React.FC = () => {
                     ))}
                 </div>
             </div>
+            <button
+                onClick={handleShuffle}
+                disabled={deck.length < playerHand.length || gameState !== GameState.PLAYING}
+                aria-label="Shuffle hand"
+                className="flex items-center gap-2 p-2 rounded-lg transition-colors text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-700 disabled:text-gray-400 dark:disabled:text-gray-600 disabled:cursor-not-allowed"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                </svg>
+                <span className="text-sm font-medium hidden sm:inline">Shuffle</span>
+            </button>
             <div className="flex items-center space-x-2">
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300" id="show-hints-label">Show Hints</span>
                 <button
