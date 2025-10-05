@@ -275,7 +275,8 @@ const App: React.FC = () => {
             // As requested, only the URL is in the message
             const shareData = {
                 title: `Town ${gridSize}x${gridSize} Score`,
-                text: 'https://shuflovic.github.io/town_66',
+                text: `https://shuflovic.github.io/town_66`,
+                url: 'https://shuflovic.github.io/town_66',
                 files: [file],
             };
 
