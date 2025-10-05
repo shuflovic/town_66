@@ -257,6 +257,11 @@ const App: React.FC = () => {
     handleStartGame(gridSize);
   };
 
+  const handleCloseGameOverModal = () => {
+    setGameState(GameState.PLAYING);
+    setMessage('Game over. Undo your last move to continue playing.');
+  };
+
   const handleSizeChange = (newSize: number) => {
     if (newSize === gridSize) return;
 
@@ -275,6 +280,7 @@ const App: React.FC = () => {
         isOpen={gameState === GameState.GAME_OVER} 
         onShare={handleShare} 
         canShare={canShare}
+        onClose={handleCloseGameOverModal}
       />
       
       <header className="w-full flex justify-between items-center p-4 bg-white dark:bg-gray-800 rounded-xl shadow-md">
