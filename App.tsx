@@ -226,22 +226,62 @@ const App: React.FC = () => {
     if (!boardRef.current) return;
     setMessage('Generating share image...');
     try {
-        const canvas = await html2canvas(boardRef.current, { 
+        const boardCanvas = await html2canvas(boardRef.current, { 
             logging: false,
             useCORS: true,
             backgroundColor: null
         });
-        canvas.toBlob(async (blob) => {
+
+        const headerHeight = 120; // Space for the text
+        const finalCanvas = document.createElement('canvas');
+        finalCanvas.width = boardCanvas.width;
+        finalCanvas.height = boardCanvas.height + headerHeight;
+        const ctx = finalCanvas.getContext('2d');
+
+        if (!ctx) {
+            setMessage('Could not create image context.');
+            return;
+        }
+        
+        // Fill background
+        ctx.fillStyle = '#111827'; // gray-900
+        ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
+        
+        // Draw text
+        const currentScore = lastScores[gridSize];
+        
+        // Title
+        ctx.textAlign = 'center';
+        ctx.font = 'bold 32px sans-serif';
+        ctx.fillStyle = 'white';
+        ctx.fillText(`Town ${gridSize}x${gridSize}`, finalCanvas.width / 2, 45);
+        
+        // Score line
+        ctx.font = '24px sans-serif';
+        ctx.fillText(`I scored ${currentScore}! Can you beat it?`, finalCanvas.width / 2, 80);
+        
+        // Hashtag
+        ctx.font = 'italic 20px sans-serif';
+        ctx.fillStyle = '#9ca3af'; // gray-400
+        ctx.fillText(`#Town${gridSize}${gridSize}`, finalCanvas.width / 2, 105);
+
+        // Draw the captured board image below the text
+        ctx.drawImage(boardCanvas, 0, headerHeight);
+
+        finalCanvas.toBlob(async (blob) => {
             if (!blob) {
                 setMessage('Error creating image.');
                 return;
             }
-            const file = new File([blob], `town${gridSize}${gridSize}-board.png`, { type: 'image/png' });
+            const file = new File([blob], `town${gridSize}x${gridSize}-score.png`, { type: 'image/png' });
+            
+            // As requested, only the URL is in the message
             const shareData = {
-                title: `Town ${gridSize}${gridSize} Score`,
-                text: `I scored ${lastScores[gridSize]} in Town ${gridSize}${gridSize}! Can you beat my score?\n #Town${gridSize}${gridSize} https://shuflovic.github.io/town_66',
+                title: `Town ${gridSize}x${gridSize} Score`,
+                text: 'https://shuflovic.github.io/town_66',
                 files: [file],
             };
+
             await navigator.share(shareData);
             setMessage('Shared successfully!');
         }, 'image/png');
