@@ -36,6 +36,7 @@ const App: React.FC = () => {
   const [showHints, setShowHints] = useState<boolean>(false);
   const [canShare, setCanShare] = useState<boolean>(false);
   const [history, setHistory] = useState<GameHistory[]>([]);
+  const [gameOverDismissed, setGameOverDismissed] = useState<boolean>(false);
   
   const [highScores, setHighScores] = useLocalStorage<{ [key: number]: number }>('town-highScores', { 5: 0, 6: 0, 7: 0 });
   const [lastScores, setLastScores] = useLocalStorage<{ [key: number]: number }>('town-lastScores', { 5: 0, 6: 0, 7: 0 });
@@ -82,6 +83,7 @@ const App: React.FC = () => {
     setSelectedTileIndex(null);
     setGameState(GameState.PLAYING);
     setHistory([]);
+    setGameOverDismissed(false);
   }, [generateDeck]);
   
   useEffect(() => {
@@ -180,6 +182,7 @@ const App: React.FC = () => {
       setPlayerHand(newPlayerHand);
       setDeck(newDeck);
       setSelectedTileIndex(null);
+      setGameOverDismissed(false);
       setMessage('Nice move! Place your next tile.');
     } else {
       setMessage('Invalid move! No duplicate shape or color in a row or column.');
@@ -197,6 +200,7 @@ const App: React.FC = () => {
     setDeck(lastState.deck);
     setScore(lastState.score);
     setHistory(newHistory);
+    setGameOverDismissed(false);
 
     setSelectedTileIndex(null);
     setMessage('Last move undone.');
@@ -234,7 +238,7 @@ const App: React.FC = () => {
 
 
   useEffect(() => {
-    if (gameState !== GameState.PLAYING) return;
+    if (gameState !== GameState.PLAYING || gameOverDismissed) return;
     if (board.length === 0) return;
 
     if (!canMakeMove(playerHand, board)) {
@@ -251,7 +255,7 @@ const App: React.FC = () => {
       
       setTimeout(() => setGameState(GameState.GAME_OVER), 1500);
     }
-  }, [playerHand, board, gameState, canMakeMove, score, gridSize, highScores, setHighScores, setLastScores]);
+  }, [playerHand, board, gameState, canMakeMove, score, gridSize, highScores, setHighScores, setLastScores, gameOverDismissed]);
   
   const handlePlayAgain = () => {
     handleStartGame(gridSize);
@@ -259,6 +263,7 @@ const App: React.FC = () => {
 
   const handleCloseGameOverModal = () => {
     setGameState(GameState.PLAYING);
+    setGameOverDismissed(true);
     setMessage('Game over. Undo your last move to continue playing.');
   };
 
