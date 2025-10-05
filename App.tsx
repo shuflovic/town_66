@@ -220,7 +220,7 @@ const App: React.FC = () => {
             const shareData = {
                 title: `Town ${gridSize}${gridSize} Score`,
                 text: `I scored ${lastScores[gridSize]} in Town ${gridSize}${gridSize}! Can you beat my score? #Town${gridSize}${gridSize}`,
-                url: 'https://shuflovic.com',
+                url: 'https://shuflovic.github.io/town_66',
                 files: [file],
             };
             await navigator.share(shareData);
