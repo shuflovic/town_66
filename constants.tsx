@@ -1,7 +1,7 @@
 import React from 'react';
 import { Shape, Color } from './types';
 
-export const INITIAL_HAND_SIZE = 4;
+export const INITIAL_HAND_SIZE = 5;
 
 // Fix: Replaced JSX.Element with React.ReactElement to resolve the 'Cannot find namespace JSX' error.
 export const SHAPE_ICONS: Record<Shape, React.ReactElement> = {
