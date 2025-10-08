@@ -31,6 +31,7 @@ const App: React.FC = () => {
   const [deck, setDeck] = useState<TileType[]>([]);
   const [playerHand, setPlayerHand] = useState<TileType[]>([]);
   const [selectedTileIndex, setSelectedTileIndex] = useState<number | null>(null);
+  const [selectedBoardTile, setSelectedBoardTile] = useState<{row: number, col: number} | null>(null);
   const [score, setScore] = useState<number>(0);
   const [message, setMessage] = useState<string>('Welcome!');
   const [showHints, setShowHints] = useState<boolean>(false);
@@ -81,6 +82,7 @@ const App: React.FC = () => {
     setMessage('Place a tile adjacent to an existing one.');
     setScore(1);
     setSelectedTileIndex(null);
+    setSelectedBoardTile(null);
     setGameState(GameState.PLAYING);
     setHistory([]);
     setGameOverDismissed(false);
@@ -146,79 +148,174 @@ const App: React.FC = () => {
   }, [getAdjacentEmptyCells, isValidPlacement]);
 
   const selectedTile = useMemo(() => {
-    return selectedTileIndex !== null ? playerHand[selectedTileIndex] : null;
-  }, [selectedTileIndex, playerHand]);
+    if (selectedTileIndex !== null) {
+        return playerHand[selectedTileIndex];
+    }
+    if (selectedBoardTile !== null && board[selectedBoardTile.row]) {
+        return board[selectedBoardTile.row][selectedBoardTile.col];
+    }
+    return null;
+  }, [selectedTileIndex, playerHand, selectedBoardTile, board]);
   
   const adjacentCells = useMemo(() => getAdjacentEmptyCells(board), [board, getAdjacentEmptyCells]);
+  
+  const isRemovalValid = useCallback((currentBoard: BoardType, r: number, c: number): boolean => {
+    const tempBoard = currentBoard.map(row => [...row]);
+    tempBoard[r][c] = null;
 
+    let remainingTilesCount = 0;
+    let startTile: { row: number, col: number } | null = null;
+    for (let i = 0; i < gridSize; i++) {
+        for (let j = 0; j < gridSize; j++) {
+            if (tempBoard[i][j]) {
+                remainingTilesCount++;
+                if (!startTile) startTile = { row: i, col: j };
+            }
+        }
+    }
+
+    if (remainingTilesCount <= 1) return true;
+    if (!startTile) return true;
+
+    const queue = [startTile];
+    const visited = new Set<string>([`${startTile.row},${startTile.col}`]);
+    let count = 0;
+
+    while (queue.length > 0) {
+        const { row: currR, col: currC } = queue.shift()!;
+        count++;
+        const neighbors = [{r:currR-1,c:currC},{r:currR+1,c:currC},{r:currR,c:currC-1},{r:currR,c:currC+1}];
+        for (const n of neighbors) {
+            const key = `${n.r},${n.c}`;
+            if (n.r >= 0 && n.r < gridSize && n.c >= 0 && n.c < gridSize && tempBoard[n.r][n.c] && !visited.has(key)) {
+                visited.add(key);
+                queue.push({row: n.r, col: n.c});
+            }
+        }
+    }
+    return count === remainingTilesCount;
+  }, [gridSize]);
+  
   const validMoves = useMemo(() => {
-      if (!selectedTile) return [];
-      return adjacentCells.filter(cell => isValidPlacement(selectedTile, cell.row, cell.col, board));
-  }, [selectedTile, board, adjacentCells, isValidPlacement]);
+    if (!selectedTile) return [];
 
+    if (selectedBoardTile) {
+        const tileToMove = selectedTile;
+        const tempBoard = board.map(row => [...row]);
+        tempBoard[selectedBoardTile.row][selectedBoardTile.col] = null;
+        
+        const possibleSpots = getAdjacentEmptyCells(tempBoard);
+        return possibleSpots.filter(cell => isValidPlacement(tileToMove, cell.row, cell.col, tempBoard));
+    }
+    
+    // Default case: tile selected from hand
+    return adjacentCells.filter(cell => isValidPlacement(selectedTile, cell.row, cell.col, board));
+
+  }, [selectedTile, selectedBoardTile, board, adjacentCells, isValidPlacement, getAdjacentEmptyCells]);
 
   const handleTileSelect = (index: number) => {
+    setSelectedBoardTile(null);
     setSelectedTileIndex(index === selectedTileIndex ? null : index);
+    if (index !== selectedTileIndex) {
+        setMessage('Select a valid spot on the board.');
+    }
+  };
+
+  const handleBoardTileClick = (r: number, c: number) => {
+    if (score <= 1) return;
+
+    if (selectedBoardTile && selectedBoardTile.row === r && selectedBoardTile.col === c) {
+        setSelectedBoardTile(null);
+        setMessage('Select a tile from your hand.');
+        return;
+    }
+    
+    if (isRemovalValid(board, r, c)) {
+        setSelectedTileIndex(null);
+        setSelectedBoardTile({row: r, col: c});
+        setMessage('Move this tile, or return it to your hand.');
+    } else {
+        setMessage('This tile cannot be moved without disconnecting others.');
+    }
   };
 
   const handleCellClick = (r: number, c: number) => {
-    if (selectedTileIndex === null) return;
-    
-    const tileToPlace = playerHand[selectedTileIndex];
-    if (isValidPlacement(tileToPlace, r, c, board)) {
-      setHistory(prev => [...prev, { board, playerHand, deck, score }]);
-      
-      const newBoard = board.map(row => [...row]);
-      newBoard[r][c] = tileToPlace;
+    if (!selectedTile || !validMoves.some(m => m.row === r && m.col === c)) {
+        setMessage('Invalid move! No duplicate shape or color in a row or column.');
+        return;
+    };
+
+    setHistory(prev => [...prev, { board, playerHand, deck, score }]);
+    const newBoard = board.map(row => [...row]);
+
+    // Case 1: Moving a tile already on the board
+    if (selectedBoardTile) {
+        newBoard[selectedBoardTile.row][selectedBoardTile.col] = null;
+        newBoard[r][c] = selectedTile;
+        setBoard(newBoard);
+        setSelectedBoardTile(null);
+        setMessage('Tile moved!');
+        return;
+    }
+
+    // Case 2: Placing a new tile from hand
+    if (selectedTileIndex !== null) {
+      newBoard[r][c] = selectedTile;
       setBoard(newBoard);
       setScore(prev => prev + 1);
 
       const newPlayerHand = playerHand.filter((_, i) => i !== selectedTileIndex);
       const newDeck = [...deck];
-      if (newDeck.length > 0) {
+      if (newPlayerHand.length < INITIAL_HAND_SIZE && newDeck.length > 0) {
         newPlayerHand.push(newDeck.pop()!);
       }
       
       setPlayerHand(newPlayerHand);
       setDeck(newDeck);
       setSelectedTileIndex(null);
-      setGameOverDismissed(false);
       setMessage('Nice move! Place your next tile.');
-    } else {
-      setMessage('Invalid move! No duplicate shape or color in a row or column.');
     }
+  };
+  
+  const handleMoveToHand = () => {
+    if (!selectedBoardTile) return;
+    const tileToRemove = board[selectedBoardTile.row][selectedBoardTile.col];
+    if (!tileToRemove) return;
+
+    setHistory(prev => [...prev, { board, playerHand, deck, score }]);
+    const newBoard = board.map(row => [...row]);
+    newBoard[selectedBoardTile.row][selectedBoardTile.col] = null;
+    setBoard(newBoard);
+
+    setPlayerHand(prev => [...prev, tileToRemove]);
+    setScore(prev => prev - 1);
+    setSelectedBoardTile(null);
+    setMessage('Tile returned to your hand.');
   };
 
   const handleUndo = () => {
     if (history.length === 0 || gameState !== GameState.PLAYING) return;
-
-    const lastState = history[history.length - 1];
-    const newHistory = history.slice(0, -1);
-
+    const lastState = history.pop()!;
     setBoard(lastState.board);
     setPlayerHand(lastState.playerHand);
     setDeck(lastState.deck);
     setScore(lastState.score);
-    setHistory(newHistory);
+    setHistory(history);
     setGameOverDismissed(false);
-
     setSelectedTileIndex(null);
+    setSelectedBoardTile(null);
     setMessage('Last move undone.');
   };
 
   const handleShuffle = () => {
     if (deck.length < playerHand.length || gameState !== GameState.PLAYING) return;
-
     setHistory(prev => [...prev, { board, playerHand, deck, score }]);
-
     const combined = shuffleDeck([...deck, ...playerHand]);
-    
     const newHand = combined.splice(0, playerHand.length);
-    const newDeck = combined;
-
     setPlayerHand(newHand);
-    setDeck(newDeck);
+    setDeck(combined);
     setSelectedTileIndex(null);
+    setSelectedBoardTile(null);
     setMessage('Hand shuffled.');
   };
   
@@ -226,61 +323,31 @@ const App: React.FC = () => {
     if (!boardRef.current) return;
     setMessage('Generating share image...');
     try {
-        const boardCanvas = await html2canvas(boardRef.current, { 
-            logging: false,
-            useCORS: true,
-            backgroundColor: null,
-            scale: 2, // Render at double resolution for sharper text
-        });
-
-        const headerHeight = 240; // Space for the text, adjusted for scale
+        const boardCanvas = await html2canvas(boardRef.current, { logging: false, useCORS: true, backgroundColor: null, scale: 2 });
+        const headerHeight = 240, canvasPadding = 80;
         const finalCanvas = document.createElement('canvas');
-        const canvasPadding = 80; // Add horizontal padding, adjusted for scale
         finalCanvas.width = boardCanvas.width + canvasPadding;
         finalCanvas.height = boardCanvas.height + headerHeight;
         const ctx = finalCanvas.getContext('2d');
-
-        if (!ctx) {
-            setMessage('Could not create image context.');
-            return;
-        }
+        if (!ctx) { setMessage('Could not create image context.'); return; }
         
-        // Fill background
-        ctx.fillStyle = '#111827'; // gray-900
+        ctx.fillStyle = '#111827';
         ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
         
-        // Draw text
-        const currentScore = lastScores[gridSize];
-        
-        // Title
         ctx.textAlign = 'center';
         ctx.font = 'bold 96px sans-serif';
         ctx.fillStyle = 'white';
         ctx.fillText(`Town ${gridSize}x${gridSize}`, finalCanvas.width / 2, 100);
         
-        // Score line
-        ctx.font = '66px sans-serif';
-        ctx.fillText(`I did  ${currentScore}, can you beat me?`, finalCanvas.width / 2, 190);
+        ctx.font = '60px sans-serif';
+        ctx.fillText(`I did score: ${lastScores[gridSize]}, can you beat me?`, finalCanvas.width / 2, 190);
 
-        // Draw the captured board image below the text, centered
         ctx.drawImage(boardCanvas, canvasPadding / 2, headerHeight);
 
         finalCanvas.toBlob(async (blob) => {
-            if (!blob) {
-                setMessage('Error creating image.');
-                return;
-            }
+            if (!blob) { setMessage('Error creating image.'); return; }
             const file = new File([blob], `town${gridSize}x${gridSize}-score.png`, { type: 'image/png' });
-            
-            // As requested, only the URL is in the message
-            const shareData = {
-                title: `Town ${gridSize}x${gridSize} Score`,
-                text: `https://shuflovic.github.io/town_66`,
-                url: 'https://shuflovic.github.io/town_66',
-                files: [file],
-            };
-
-            await navigator.share(shareData);
+            await navigator.share({ title: `Town ${gridSize}x${gridSize} Score`, text: 'https://shuflovic.github.io/town_66', files: [file] });
             setMessage('Shared successfully!');
         }, 'image/png');
     } catch (error) {
@@ -289,30 +356,21 @@ const App: React.FC = () => {
     }
   };
 
-
   useEffect(() => {
     if (gameState !== GameState.PLAYING || gameOverDismissed) return;
     if (board.length === 0) return;
 
     if (!canMakeMove(playerHand, board)) {
-      if (playerHand.length === 0) {
-        setMessage("Congratulations! You've placed all your tiles!");
-      } else {
-        setMessage('No valid moves left. Game over!');
-      }
-
+      setMessage(playerHand.length === 0 ? "Congratulations! You've placed all your tiles!" : 'No valid moves left. Game over!');
       setLastScores(prev => ({...prev, [gridSize]: score}));
       if (score > (highScores[gridSize] ?? 0)) {
         setHighScores(prev => ({...prev, [gridSize]: score}));
       }
-      
       setTimeout(() => setGameState(GameState.GAME_OVER), 1500);
     }
   }, [playerHand, board, gameState, canMakeMove, score, gridSize, highScores, setHighScores, setLastScores, gameOverDismissed]);
   
-  const handlePlayAgain = () => {
-    handleStartGame(gridSize);
-  };
+  const handlePlayAgain = () => handleStartGame(gridSize);
 
   const handleCloseGameOverModal = () => {
     setGameState(GameState.PLAYING);
@@ -322,10 +380,7 @@ const App: React.FC = () => {
 
   const handleSizeChange = (newSize: number) => {
     if (newSize === gridSize) return;
-
-    if (score > 1 && !window.confirm('This will start a new game. Are you sure?')) {
-        return;
-    }
+    if (score > 1 && !window.confirm('This will start a new game. Are you sure?')) return;
     handleStartGame(newSize);
   };
 
@@ -372,7 +427,7 @@ const App: React.FC = () => {
       </header>
 
       <main ref={boardRef} className="flex-grow flex items-center justify-center">
-        {board.length > 0 && <Board board={board} onCellClick={handleCellClick} validMoves={validMoves} selectedTile={selectedTile} adjacentCells={adjacentCells} showHints={showHints} gridSize={gridSize}/>}
+        {board.length > 0 && <Board board={board} onCellClick={handleCellClick} onBoardTileClick={handleBoardTileClick} validMoves={validMoves} selectedTile={selectedTile} selectedBoardTile={selectedBoardTile} adjacentCells={adjacentCells} showHints={showHints} gridSize={gridSize} />}
       </main>
 
       <footer className="w-full flex flex-col items-center space-y-2">
@@ -384,6 +439,8 @@ const App: React.FC = () => {
             onTileClick={handleTileSelect} 
             selectedTileIndex={selectedTileIndex}
             gridSize={gridSize}
+            isBoardTileSelected={!!selectedBoardTile}
+            onMoveToHand={handleMoveToHand}
         />
         <div className="w-full max-w-lg flex justify-around items-center p-2 bg-gray-200 dark:bg-gray-800 rounded-xl shadow-lg">
             <div className="flex items-center gap-2">
