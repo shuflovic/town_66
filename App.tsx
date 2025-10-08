@@ -208,12 +208,37 @@ const App: React.FC = () => {
         return possibleSpots.filter(cell => isValidPlacement(tileToMove, cell.row, cell.col, tempBoard));
     }
     
-    // Default case: tile selected from hand
     return adjacentCells.filter(cell => isValidPlacement(selectedTile, cell.row, cell.col, board));
 
   }, [selectedTile, selectedBoardTile, board, adjacentCells, isValidPlacement, getAdjacentEmptyCells]);
 
   const handleTileSelect = (index: number) => {
+    if (selectedBoardTile && playerHand.length >= INITIAL_HAND_SIZE) {
+        const tileFromBoard = board[selectedBoardTile.row][selectedBoardTile.col];
+        if (!tileFromBoard) return;
+
+        setHistory(prev => [...prev, { board, playerHand, deck, score }]);
+        
+        const tileToDiscard = playerHand[index];
+        const newPlayerHand = [...playerHand];
+        newPlayerHand[index] = tileFromBoard;
+
+        const newDeck = [...deck, tileToDiscard];
+
+        const newBoard = board.map(row => [...row]);
+        newBoard[selectedBoardTile.row][selectedBoardTile.col] = null;
+        
+        setBoard(newBoard);
+        setPlayerHand(newPlayerHand);
+        setDeck(shuffleDeck(newDeck));
+        setScore(prev => prev - 1);
+        
+        setSelectedBoardTile(null);
+        setSelectedTileIndex(null);
+        setMessage('Tile swapped. Select a tile to place.');
+        return;
+    }
+
     setSelectedBoardTile(null);
     setSelectedTileIndex(index === selectedTileIndex ? null : index);
     if (index !== selectedTileIndex) {
@@ -233,7 +258,11 @@ const App: React.FC = () => {
     if (isRemovalValid(board, r, c)) {
         setSelectedTileIndex(null);
         setSelectedBoardTile({row: r, col: c});
-        setMessage('Move this tile, or return it to your hand.');
+        if (playerHand.length >= INITIAL_HAND_SIZE) {
+            setMessage('Move this tile, or click a hand tile to swap.');
+        } else {
+            setMessage('Move this tile, or return it to your hand.');
+        }
     } else {
         setMessage('This tile cannot be moved without disconnecting others.');
     }
@@ -248,7 +277,6 @@ const App: React.FC = () => {
     setHistory(prev => [...prev, { board, playerHand, deck, score }]);
     const newBoard = board.map(row => [...row]);
 
-    // Case 1: Moving a tile already on the board
     if (selectedBoardTile) {
         newBoard[selectedBoardTile.row][selectedBoardTile.col] = null;
         newBoard[r][c] = selectedTile;
@@ -258,7 +286,6 @@ const App: React.FC = () => {
         return;
     }
 
-    // Case 2: Placing a new tile from hand
     if (selectedTileIndex !== null) {
       newBoard[r][c] = selectedTile;
       setBoard(newBoard);
@@ -278,19 +305,20 @@ const App: React.FC = () => {
   };
   
   const handleMoveToHand = () => {
-    if (!selectedBoardTile) return;
+    if (!selectedBoardTile || playerHand.length >= INITIAL_HAND_SIZE) return;
     const tileToRemove = board[selectedBoardTile.row][selectedBoardTile.col];
     if (!tileToRemove) return;
 
     setHistory(prev => [...prev, { board, playerHand, deck, score }]);
+    
     const newBoard = board.map(row => [...row]);
     newBoard[selectedBoardTile.row][selectedBoardTile.col] = null;
     setBoard(newBoard);
-
+    
     setPlayerHand(prev => [...prev, tileToRemove]);
+    setMessage('Tile returned to your hand.');
     setScore(prev => prev - 1);
     setSelectedBoardTile(null);
-    setMessage('Tile returned to your hand.');
   };
 
   const handleUndo = () => {
