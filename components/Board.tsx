@@ -5,14 +5,26 @@ import Tile from './Tile';
 interface BoardProps {
   board: BoardType;
   onCellClick: (row: number, col: number) => void;
+  onBoardTileClick: (row: number, col: number) => void;
   validMoves: { row: number; col: number }[];
   selectedTile: TileType | null;
+  selectedBoardTile: { row: number; col: number } | null;
   adjacentCells: { row: number; col: number }[];
   showHints: boolean;
   gridSize: number;
 }
 
-const Board: React.FC<BoardProps> = ({ board, onCellClick, validMoves, selectedTile, adjacentCells, showHints, gridSize }) => {
+const Board: React.FC<BoardProps> = ({ 
+  board, 
+  onCellClick,
+  onBoardTileClick,
+  validMoves, 
+  selectedTile,
+  selectedBoardTile,
+  adjacentCells, 
+  showHints, 
+  gridSize,
+}) => {
   const gridColsMap: { [key: number]: string } = {
     5: 'grid-cols-5',
     6: 'grid-cols-6',
@@ -35,22 +47,34 @@ const Board: React.FC<BoardProps> = ({ board, onCellClick, validMoves, selectedT
             const isPlaced = !!tile;
             const isAdjacent = adjacentCells.some(move => move.row === r && move.col === c);
             const isValidMove = validMoves.some(move => move.row === r && move.col === c);
-
-            const isClickable = selectedTile && isAdjacent;
+            const isClickablePlacement = selectedTile && (isAdjacent || !!selectedBoardTile);
+            const isSelectedOnBoard = selectedBoardTile?.row === r && selectedBoardTile?.col === c;
 
             const getCellClasses = () => {
-              if (!isClickable) return 'bg-gray-300 dark:bg-gray-700';
+              if (isPlaced) return 'bg-transparent';
+              if (!selectedTile) return 'bg-gray-300 dark:bg-gray-700';
+              if (!isClickablePlacement && !isValidMove) return 'bg-gray-300 dark:bg-gray-700';
               if (showHints && isValidMove) return 'bg-green-300 dark:bg-green-700 cursor-pointer';
-              return 'bg-gray-400 dark:bg-gray-600 cursor-pointer hover:bg-gray-500 dark:hover:bg-gray-500';
+              if (isClickablePlacement) return 'bg-gray-400 dark:bg-gray-600 cursor-pointer hover:bg-gray-500 dark:hover:bg-gray-500';
+              return 'bg-gray-300 dark:bg-gray-700';
             };
 
             return (
               <div
                 key={`${r}-${c}`}
                 className={`flex items-center justify-center rounded-md transition-colors ${tileSizeClass} ${getCellClasses()}`}
-                onClick={() => (isClickable ? onCellClick(r, c) : null)}
+                onClick={() => !isPlaced && (isClickablePlacement || isValidMove) ? onCellClick(r, c) : undefined}
               >
-                {isPlaced ? <Tile tile={tile} gridSize={gridSize} /> : (selectedTile && isValidMove && showHints) ? <Tile tile={selectedTile} isGhost={true} gridSize={gridSize} /> : null}
+                {isPlaced ? (
+                  <Tile
+                    tile={tile}
+                    gridSize={gridSize}
+                    isSelected={isSelectedOnBoard}
+                    onClick={() => onBoardTileClick(r, c)}
+                  />
+                 ) : (selectedTile && isValidMove && showHints) ? (
+                  <Tile tile={selectedTile} isGhost={true} gridSize={gridSize} />
+                 ) : null}
               </div>
             );
           })
