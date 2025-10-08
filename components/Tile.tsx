@@ -8,9 +8,10 @@ interface TileProps {
   isSelected?: boolean;
   isGhost?: boolean;
   gridSize: number;
+  isDiscardTarget?: boolean;
 }
 
-const Tile: React.FC<TileProps> = ({ tile, onClick, isSelected = false, isGhost = false, gridSize }) => {
+const Tile: React.FC<TileProps> = ({ tile, onClick, isSelected = false, isGhost = false, gridSize, isDiscardTarget = false }) => {
   if (!tile) {
     return null;
   }
@@ -27,12 +28,13 @@ const Tile: React.FC<TileProps> = ({ tile, onClick, isSelected = false, isGhost 
   const shapeIcon = SHAPE_ICONS[tile.shape];
   
   const selectedClasses = isSelected ? 'ring-4 ring-offset-2 ring-cyan-400 dark:ring-offset-gray-800' : '';
+  const discardClasses = isDiscardTarget ? 'ring-4 ring-offset-2 ring-red-500 dark:ring-offset-gray-800 animate-pulse' : '';
   const ghostClasses = isGhost ? 'opacity-50' : '';
   const clickableClasses = onClick ? 'cursor-pointer hover:scale-105 transition-transform' : '';
 
   return (
     <div 
-      className={`flex items-center justify-center rounded-lg shadow-md border-2 ${sizes.container} ${colorClass.bg} ${colorClass.border} ${selectedClasses} ${ghostClasses} ${clickableClasses}`}
+      className={`flex items-center justify-center rounded-lg shadow-md border-2 ${sizes.container} ${colorClass.bg} ${colorClass.border} ${selectedClasses} ${discardClasses} ${ghostClasses} ${clickableClasses}`}
       onClick={onClick}
     >
       <div className={`${sizes.icon} ${colorClass.text}`}>
