@@ -351,31 +351,60 @@ const App: React.FC = () => {
     if (!boardRef.current) return;
     setMessage('Generating share image...');
     try {
-        const boardCanvas = await html2canvas(boardRef.current, { logging: false, useCORS: true, backgroundColor: null, scale: 2 });
-        const headerHeight = 240, canvasPadding = 80;
+        const boardCanvas = await html2canvas(boardRef.current, { 
+            logging: false,
+            useCORS: true,
+            backgroundColor: null,
+            scale: 2, // Render at double resolution for sharper text
+        });
+
+        const headerHeight = 240; // Space for the text, adjusted for scale
         const finalCanvas = document.createElement('canvas');
+        const canvasPadding = 80; // Add horizontal padding, adjusted for scale
         finalCanvas.width = boardCanvas.width + canvasPadding;
         finalCanvas.height = boardCanvas.height + headerHeight;
         const ctx = finalCanvas.getContext('2d');
-        if (!ctx) { setMessage('Could not create image context.'); return; }
+
+        if (!ctx) {
+            setMessage('Could not create image context.');
+            return;
+        }
         
-        ctx.fillStyle = '#111827';
+        // Fill background
+        ctx.fillStyle = '#111827'; // gray-900
         ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
         
+        // Draw text
+        const currentScore = lastScores[gridSize];
+        
+        // Title
         ctx.textAlign = 'center';
         ctx.font = 'bold 96px sans-serif';
         ctx.fillStyle = 'white';
         ctx.fillText(`Town ${gridSize}x${gridSize}`, finalCanvas.width / 2, 100);
         
-        ctx.font = '60px sans-serif';
-        ctx.fillText(`I did score: ${lastScores[gridSize]}, can you beat me?`, finalCanvas.width / 2, 190);
+        // Score line
+        ctx.font = '72px sans-serif';
+        ctx.fillText(`Score: ${currentScore}`, finalCanvas.width / 2, 190);
 
+        // Draw the captured board image below the text, centered
         ctx.drawImage(boardCanvas, canvasPadding / 2, headerHeight);
 
         finalCanvas.toBlob(async (blob) => {
-            if (!blob) { setMessage('Error creating image.'); return; }
+            if (!blob) {
+                setMessage('Error creating image.');
+                return;
+            }
             const file = new File([blob], `town${gridSize}x${gridSize}-score.png`, { type: 'image/png' });
-            await navigator.share({ title: `Town ${gridSize}x${gridSize} Score`, text: 'https://shuflovic.github.io/town_66', files: [file] });
+            
+            // As requested, only the URL is in the message
+            const shareData = {
+                title: `Town ${gridSize}x${gridSize} Score`,
+                text: 'https://shuflovic.github.io/town_66',
+                files: [file],
+            };
+
+            await navigator.share(shareData);
             setMessage('Shared successfully!');
         }, 'image/png');
     } catch (error) {
