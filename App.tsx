@@ -385,7 +385,7 @@ const App: React.FC = () => {
         
         // Score line
         ctx.font = '72px sans-serif';
-        ctx.fillText(`Score: ${currentScore}`, finalCanvas.width / 2, 190);
+        ctx.fillText(`i did  ${currentScore}, can you beat me?`, finalCanvas.width / 2, 190);
 
         // Draw the captured board image below the text, centered
         ctx.drawImage(boardCanvas, canvasPadding / 2, headerHeight);
@@ -400,7 +400,7 @@ const App: React.FC = () => {
             // As requested, only the URL is in the message
             const shareData = {
                 title: `Town ${gridSize}x${gridSize} Score`,
-                text: 'https://shuflovic.github.io/town_66',
+                text: `https://shuflovic.github.io/town_66`,
                 files: [file],
             };
 
