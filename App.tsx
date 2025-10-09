@@ -356,23 +356,21 @@ const App: React.FC = () => {
             logging: false,
             useCORS: true,
             backgroundColor: null,
-            scale: 2, // Render at double resolution for sharper text
+            scale: 2,
         });
-
-        const headerHeight = 240; // Space for the text, adjusted for scale
+        const headerHeight = 240;
         const finalCanvas = document.createElement('canvas');
-        const canvasPadding = 80; // Add horizontal padding, adjusted for scale
+        const canvasPadding = 80;
         finalCanvas.width = boardCanvas.width + canvasPadding;
         finalCanvas.height = boardCanvas.height + headerHeight;
         const ctx = finalCanvas.getContext('2d');
-
         if (!ctx) {
             setMessage('Could not create image context.');
             return;
         }
         
         // Fill background
-        ctx.fillStyle = '#111827'; // gray-900
+        ctx.fillStyle = '#111827';
         ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
         
         // Draw text
@@ -386,11 +384,11 @@ const App: React.FC = () => {
         
         // Score line
         ctx.font = '66px sans-serif';
-        ctx.fillText(`i did  ${currentScore}, can you beat me?`, finalCanvas.width / 2, 190);
-
+        ctx.fillText(`i did ${currentScore}, can you beat me?`, finalCanvas.width / 2, 190);
+        
         // Draw the captured board image below the text, centered
         ctx.drawImage(boardCanvas, canvasPadding / 2, headerHeight);
-
+        
         finalCanvas.toBlob(async (blob) => {
             if (!blob) {
                 setMessage('Error creating image.');
@@ -398,15 +396,27 @@ const App: React.FC = () => {
             }
             const file = new File([blob], `town${gridSize}x${gridSize}-score.png`, { type: 'image/png' });
             
-            // As requested, only the URL is in the message
+            // Try to share with both text and image
+            const url = 'https://shuflovic.github.io/town_66';
             const shareData = {
                 title: `Town ${gridSize}x${gridSize} Score`,
-                text: `https://shuflovic.github.io/town_66`,
+                text: `I scored ${currentScore} in Town ${gridSize}x${gridSize}! Can you beat me?\n\n${url}`,
                 files: [file],
             };
-
-            await navigator.share(shareData);
-            setMessage('Shared successfully!');
+            
+            // Check if sharing is supported
+            if (navigator.canShare && navigator.canShare(shareData)) {
+                await navigator.share(shareData);
+                setMessage('Shared successfully!');
+            } else {
+                // Fallback: copy URL to clipboard and download image
+                await navigator.clipboard.writeText(url);
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `town${gridSize}x${gridSize}-score.png`;
+                link.click();
+                setMessage('Image downloaded and URL copied to clipboard! Paste the URL when sharing the image.');
+            }
         }, 'image/png');
     } catch (error) {
         console.error('Error sharing:', error);
