@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { GameState, Tile as TileType, Board as BoardType, SHAPES, COLORS } from './types';
 import { INITIAL_HAND_SIZE } from './constants';
@@ -351,33 +352,44 @@ const App: React.FC = () => {
     if (!boardRef.current) return;
     setMessage('Generating share image...');
     try {
-        const boardCanvas = await html2canvas(boardRef.current, {
+        const boardCanvas = await html2canvas(boardRef.current, { 
             logging: false,
             useCORS: true,
             backgroundColor: null,
-            scale: 2,
+            scale: 2, // Render at double resolution for sharper text
         });
-        const headerHeight = 200; // Space for text
+
+        const headerHeight = 240; // Space for the text, adjusted for scale
         const finalCanvas = document.createElement('canvas');
-        const canvasPadding = 80;
+        const canvasPadding = 80; // Add horizontal padding, adjusted for scale
         finalCanvas.width = boardCanvas.width + canvasPadding;
         finalCanvas.height = boardCanvas.height + headerHeight;
         const ctx = finalCanvas.getContext('2d');
+
         if (!ctx) {
             setMessage('Could not create image context.');
             return;
         }
-
+        
         // Fill background
         ctx.fillStyle = '#111827'; // gray-900
         ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
-
+        
         // Draw text
         const currentScore = lastScores[gridSize];
+        
+        // Title
         ctx.textAlign = 'center';
-        ctx.font = 'bold 80px sans-serif';
+        ctx.font = 'bold 96px sans-serif';
         ctx.fillStyle = 'white';
-        ctx.fillText(`Town ${gridSize}x${gridSize}: ${currentScore}`, finalCanvas.width / 2, 140);
+        ctx.fillText(`Town ${gridSize}x${gridSize}`, finalCanvas.width / 2, 100);
+        
+        // Score line
+        ctx.font = '66px sans-serif';
+        ctx.fillText(`i did  ${currentScore}, can you beat me?`, finalCanvas.width / 2, 190);
+
+        // Draw the captured board image below the text, centered
+        ctx.drawImage(boardCanvas, canvasPadding / 2, headerHeight);
 
         finalCanvas.toBlob(async (blob) => {
             if (!blob) {
@@ -385,11 +397,11 @@ const App: React.FC = () => {
                 return;
             }
             const file = new File([blob], `town${gridSize}x${gridSize}-score.png`, { type: 'image/png' });
-            const shareUrl = 'https://shuflovic.github.io/town_66';
-
+            
+            // As requested, only the URL is in the message
             const shareData = {
                 title: `Town ${gridSize}x${gridSize} Score`,
-                text: `I scored ${currentScore} on Town ${gridSize}x${gridSize}!\n${shareUrl}`,
+                text: `https://shuflovic.github.io/town_66`,
                 files: [file],
             };
 
@@ -398,7 +410,7 @@ const App: React.FC = () => {
         }, 'image/png');
     } catch (error) {
         console.error('Error sharing:', error);
-        setMessage('Could not share. Try copying the link: https://shuflovic.github.io/town_66');
+        setMessage('Could not share. Maybe your browser does not support it.');
     }
   };
 
