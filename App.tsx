@@ -368,7 +368,7 @@ const App: React.FC = () => {
         ctx.fillText(`Town ${gridSize}x${gridSize}`, finalCanvas.width / 2, 100);
         
         ctx.font = '60px sans-serif';
-        ctx.fillText(`I did score: ${lastScores[gridSize]}, can you beat me?`, finalCanvas.width / 2, 190);
+        ctx.fillText(`I did ${lastScores[gridSize]}, can you beat me?`, finalCanvas.width / 2, 190);
 
         ctx.drawImage(boardCanvas, canvasPadding / 2, headerHeight);
 
