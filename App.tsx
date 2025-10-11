@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { GameState, Tile as TileType, Board as BoardType, SHAPES, COLORS } from './types';
 import { INITIAL_HAND_SIZE } from './constants';
@@ -236,7 +235,6 @@ const App: React.FC = () => {
         
         setSelectedBoardTile(null);
         setSelectedTileIndex(null);
-        setGameOverDismissed(false);
         setMessage('Tile swapped. Select a tile to place.');
         return;
     }
@@ -321,7 +319,6 @@ const App: React.FC = () => {
     setMessage('Tile returned to your hand.');
     setScore(prev => prev - 1);
     setSelectedBoardTile(null);
-    setGameOverDismissed(false);
   };
 
   const handleUndo = () => {
@@ -354,61 +351,31 @@ const App: React.FC = () => {
     if (!boardRef.current) return;
     setMessage('Generating share image...');
     try {
-        const boardCanvas = await html2canvas(boardRef.current, { 
-            logging: false,
-            useCORS: true,
-            backgroundColor: null,
-            scale: 2, // Render at double resolution for sharper text
-        });
-
-        const headerHeight = 240; // Space for the text, adjusted for scale
+        const boardCanvas = await html2canvas(boardRef.current, { logging: false, useCORS: true, backgroundColor: null, scale: 2 });
+        const headerHeight = 240, canvasPadding = 80;
         const finalCanvas = document.createElement('canvas');
-        const canvasPadding = 80; // Add horizontal padding, adjusted for scale
         finalCanvas.width = boardCanvas.width + canvasPadding;
         finalCanvas.height = boardCanvas.height + headerHeight;
         const ctx = finalCanvas.getContext('2d');
-
-        if (!ctx) {
-            setMessage('Could not create image context.');
-            return;
-        }
+        if (!ctx) { setMessage('Could not create image context.'); return; }
         
-        // Fill background
-        ctx.fillStyle = '#111827'; // gray-900
+        ctx.fillStyle = '#111827';
         ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
         
-        // Draw text
-        const currentScore = lastScores[gridSize];
-        
-        // Title
         ctx.textAlign = 'center';
         ctx.font = 'bold 96px sans-serif';
         ctx.fillStyle = 'white';
         ctx.fillText(`Town ${gridSize}x${gridSize}`, finalCanvas.width / 2, 100);
         
-        // Score line
-        ctx.font = '66px sans-serif';
-        ctx.fillText(`i did  ${currentScore}, can you beat me?`, finalCanvas.width / 2, 190);
+        ctx.font = '60px sans-serif';
+        ctx.fillText(`I did score: ${lastScores[gridSize]}, can you beat me?`, finalCanvas.width / 2, 190);
 
-        // Draw the captured board image below the text, centered
         ctx.drawImage(boardCanvas, canvasPadding / 2, headerHeight);
 
         finalCanvas.toBlob(async (blob) => {
-            if (!blob) {
-                setMessage('Error creating image.');
-                return;
-            }
+            if (!blob) { setMessage('Error creating image.'); return; }
             const file = new File([blob], `town${gridSize}x${gridSize}-score.png`, { type: 'image/png' });
-            
-            // As requested, only the URL is in the message
-            const shareData = {
-                title: `Town ${gridSize}x${gridSize} Score`,
-                text: `https://shuflovic.github.io/town_66`,
-                url: `https://shuflovic.github.io/town_66`,
-                files: [file],
-            };
-
-            await navigator.share(shareData);
+            await navigator.share({ title: `Town ${gridSize}x${gridSize} Score`, text: 'https://shuflovic.github.io/town_66', files: [file] });
             setMessage('Shared successfully!');
         }, 'image/png');
     } catch (error) {
@@ -486,6 +453,19 @@ const App: React.FC = () => {
             </div>
           </div>
       </header>
+      
+      <div className="w-full flex justify-end">
+        <button
+            onClick={() => handleStartGame(gridSize)}
+            aria-label="Start a new game"
+            className="flex items-center gap-2 py-2 px-4 rounded-lg shadow-md transition-colors text-gray-700 dark:text-gray-200 bg-white hover:bg-gray-100 dark:bg-gray-700 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600"
+        >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 110 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+            </svg>
+            <span className="font-semibold">New Game</span>
+        </button>
+      </div>
 
       <main ref={boardRef} className="flex-grow flex items-center justify-center">
         {board.length > 0 && <Board board={board} onCellClick={handleCellClick} onBoardTileClick={handleBoardTileClick} validMoves={validMoves} selectedTile={selectedTile} selectedBoardTile={selectedBoardTile} adjacentCells={adjacentCells} showHints={showHints} gridSize={gridSize} />}
