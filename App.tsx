@@ -235,6 +235,7 @@ const App: React.FC = () => {
         
         setSelectedBoardTile(null);
         setSelectedTileIndex(null);
+        setGameOverDismissed(false);
         setMessage('Tile swapped. Select a tile to place.');
         return;
     }
@@ -318,6 +319,7 @@ const App: React.FC = () => {
     setPlayerHand(prev => [...prev, tileToRemove]);
     setMessage('Tile returned to your hand.');
     setScore(prev => prev - 1);
+    setGameOverDismissed(false);
     setSelectedBoardTile(null);
   };
 
