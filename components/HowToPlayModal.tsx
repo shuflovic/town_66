@@ -12,7 +12,8 @@ const content = {
       'The goal is to place as many tiles as possible.',
       'Click a tile in your hand, then click an empty spot on the board to place it.',
       <>You can only place tiles <span className="font-semibold">next to</span> another tile.</>,
-      <><span className="font-semibold text-red-500">THE MAIN RULE:</span> No two tiles can share a <span className="font-semibold">color</span> or a <span className="font-semibold">shape</span> in the same row or column.</>
+      <><span className="font-semibold text-red-500">THE MAIN RULE:</span> No two tiles can share a <span className="font-semibold">color</span> or a <span className="font-semibold">shape</span> in the same row or column.</>,
+      <>At the bottom, you can <span className="font-semibold">change board size</span>, <span className="font-semibold">shuffle</span> your hand, or toggle <span className="font-semibold">hints</span>.</>
     ],
     buttonText: 'Start Playing!'
   },
@@ -22,7 +23,8 @@ const content = {
       'Cieľom hry je umiestniť na plochu čo najviac kociek.',
       'Klikni na kocku v ruke a potom na prázdne miesto na hracej ploche, kam ju chces položiť.',
       <>Kocku môžes položiť iba <span className="font-semibold">vedľa</span> inej kocky. Vedľa, nie diagonálne!</>,
-      <><span className="font-semibold text-red-500">HLAVNÉ PRAVIDLO:</span> V jednom riadku alebo stĺpci sa nemôžu nachádzať dve kocky rovnakej <span className="font-semibold">farby</span> alebo <span className="font-semibold">tvaru. Podobne ako Sudoku.</span>.</>
+      <><span className="font-semibold text-red-500">HLAVNÉ PRAVIDLO:</span> V jednom riadku alebo stĺpci sa nemôžu nachádzať dve kocky rovnakej <span className="font-semibold">farby</span> alebo <span className="font-semibold">tvaru.</span> Podobne ako Sudoku.</>,
+      <>Dolu môžeš <span className="font-semibold">zmeniť veľkosť plochy</span>, <span className="font-semibold">zamiešať</span> karty alebo zapnúť <span className="font-semibold">nápovedy</span>.</>
     ],
     buttonText: 'Začať hrať!'
   }
