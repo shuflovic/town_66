@@ -19,10 +19,10 @@ const content = {
   sk: {
     title: 'Ako hrať',
     rules: [
-      'Cieľom je umiestniť na plochu čo najviac kociek.',
-      'Klikni na kocku v ruke a potom na prázdne miesto na hracej ploche, kam ho chces umiestniť.',
-      <>Kocky môžes položiť iba <span className="font-semibold">vedľa</span> inej kocky. Vedľa, nie diagonalne</>,
-      <><span className="font-semibold text-red-500">HLAVNÉ PRAVIDLO:</span> V jednom riadku alebo stĺpci sa nemôžu nachádzať dve kocky rovnakej <span className="font-semibold">farby</span> alebo <span className="font-semibold">tvaru</span>.</>
+      'Cieľom hry je umiestniť na plochu čo najviac kociek.',
+      'Klikni na kocku v ruke a potom na prázdne miesto na hracej ploche, kam ju chces položiť.',
+      <>Kocku môžes položiť iba <span className="font-semibold">vedľa</span> inej kocky. Vedľa, nie diagonálne!</>,
+      <><span className="font-semibold text-red-500">HLAVNÉ PRAVIDLO:</span> V jednom riadku alebo stĺpci sa nemôžu nachádzať dve kocky rovnakej <span className="font-semibold">farby</span> alebo <span className="font-semibold">tvaru. Podobne ako Sudoku.</span>.</>
     ],
     buttonText: 'Začať hrať!'
   }
